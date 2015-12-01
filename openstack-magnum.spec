@@ -1,23 +1,23 @@
-%global release_name mitaka
 %global service magnum
 
 Name:		openstack-magnum
 Summary:	OpenStack Container Orchestration (magnum)
 Epoch:		1
-Version:	1.1.0.0
-Release:	5%{?dist}
+Version:	1.1.0
+Release:	1%{?dist}
 License:	ASL 2.0
 URL:		http://www.openstack.org
 
 Provides:	magnum
 
-Source0:        %{service}-stable-%{release_name}.tar.gz
+Source0:	http://tarballs.openstack.org/%{service}/%{service}-%{version}.tar.gz
 
-Source1:	magnum.logrotate
+Source1:	%{service}.logrotate
 Source2:	openstack-magnum-api.service
 Source4:	openstack-magnum-conductor.service
 
 BuildArch: noarch
+
 BuildRequires: git
 BuildRequires: python2-devel
 BuildRequires: python-pbr
@@ -33,9 +33,9 @@ Requires: %{name}-api = %{epoch}:%{version}-%{release}
 OpenStack Magnum
 
 %prep
-%setup -q -n magnum-%{version}
-# Remove the requirements file so that pbr hooks don't add it
-# to distutils requires_dist config
+%setup -q -n %{service}-%{version}
+
+# Let's handle dependencies ourselves
 rm -rf {test-,}requirements{-bandit,}.txt tools/{pip,test}-requires
 
 # Remove tests in contrib
@@ -66,7 +66,6 @@ install -p -D -m 640 etc/magnum/policy.json %{buildroot}/%{_sysconfdir}/magnum
 
 %package common
 Summary: Magnum common
-Group: System Environment/Base
 
 Requires: MySQL-python
 Requires: python-babel
@@ -125,7 +124,7 @@ Components common to all OpenStack Magnum services
 %files common
 %{_bindir}/magnum-db-manage
 %{_bindir}/magnum-template-manage
-%doc LICENSE
+%license LICENSE
 %{python_sitelib}/magnum*
 %dir %attr(0750,magnum,root) %{_localstatedir}/log/magnum
 %dir %attr(0755,magnum,root) %{_localstatedir}/run/magnum
@@ -157,7 +156,8 @@ Requires(postun): systemd
 OpenStack Magnum Conductor
 
 %files conductor
-%doc README.rst LICENSE
+%doc README.rst
+%license LICENSE
 %{_bindir}/magnum-conductor
 %{_unitdir}/openstack-magnum-conductor.service
 
@@ -184,7 +184,8 @@ Requires(postun): systemd
 OpenStack-native ReST API to the Magnum Engine
 
 %files api
-%doc README.rst LICENSE
+%doc README.rst
+%license LICENSE
 %{_bindir}/magnum-api
 %{_unitdir}/openstack-magnum-api.service
 
@@ -198,7 +199,7 @@ OpenStack-native ReST API to the Magnum Engine
 %systemd_postun_with_restart openstack-magnum-api.service
 
 %changelog
-* Wed Nov 25 2015 Mathieu Velten <mathieu.velten@cern.ch> 1:1.1.0.0-1
+* Tue Dec 1 2015 Mathieu Velten <mathieu.velten@cern.ch> 1:1.1.0-1
 - Mitaka M1 release
 
 * Thu Nov 12 2015 Mathieu Velten <mathieu.velten@cern.ch> 1:1.0.0.0b2.dev4-1
