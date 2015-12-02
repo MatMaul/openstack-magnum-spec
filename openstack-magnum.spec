@@ -1,12 +1,13 @@
+%global with_doc %{!?_without_doc:1}%{?_without_doc:0}
 %global service magnum
 
 Name:		openstack-magnum
-Summary:	OpenStack Container Orchestration (magnum)
+Summary:	Container Management project for OpenStack
 Epoch:		1
 Version:	1.1.0
-Release:	1%{?dist}
+Release:	2%{?dist}
 License:	ASL 2.0
-URL:		http://www.openstack.org
+URL:		https://github.com/openstack/magnum.git
 
 Provides:	magnum
 
@@ -30,7 +31,67 @@ Requires: %{name}-conductor = %{epoch}:%{version}-%{release}
 Requires: %{name}-api = %{epoch}:%{version}-%{release}
 
 %description
-OpenStack Magnum
+Magnum is an OpenStack project which offers container orchestration engines
+for deploying and managing containers as first class resources in OpenStack.
+
+%if 0%{?with_doc}
+%package -n %{name}-doc
+Summary:          Documentation for OpenStack Magnum
+
+Requires:         %{name} = %{epoch}:%{version}-%{release}
+
+BuildRequires:   python-sphinx
+BuildRequires:   python-oslo-sphinx
+BuildRequires:   python-stevedore
+
+%description -n %{name}-doc
+Magnum is an OpenStack project which offers container orchestration engines
+for deploying and managing containers as first class resources in OpenStack.
+
+This package contains documentation files for Magnum.
+%endif
+
+# tests
+%package -n %{name}-test
+Summary:          Tests for OpenStack Magnum
+
+Requires:         %{name} = %{epoch}:%{version}-%{release}
+
+BuildRequires:   python-coverage
+BuildRequires:   python-fixtures
+BuildRequires:   python-mock
+BuildRequires:   python-oslotest
+BuildRequires:   python-os-testr
+BuildRequires:   python-subunit
+BuildRequires:   python-testrepository
+BuildRequires:   python-testscenarios
+BuildRequires:   python-testtools
+BuildRequires:   python-tempest-lib
+BuildRequires:   python-wsme
+BuildRequires:   python-oslo-config
+BuildRequires:   python-oslo-policy
+BuildRequires:   python-jsonpatch
+BuildRequires:   python-barbicanclient
+BuildRequires:   python-eventlet
+BuildRequires:   python-keystoneclient
+BuildRequires:   python-cryptography
+BuildRequires:   python-heatclient
+BuildRequires:   python-oslo-messaging
+BuildRequires:   python-oslo-service
+BuildRequires:   python-taskflow
+BuildRequires:   python-oslo-db
+BuildRequires:   python-oslo-versionedobjects
+BuildRequires:   python-glanceclient
+BuildRequires:   python-keystonemiddleware
+BuildRequires:   python-mox3
+BuildRequires:   python-novaclient
+BuildRequires:   python-docker-py
+BuildRequires:   python-pecan
+BuildRequires:   python-pep8
+
+%description -n %{name}-test
+Magnum is an OpenStack project which offers container orchestration engines
+for deploying and managing containers as first class resources in OpenStack.
 
 %prep
 %setup -q -n %{service}-%{version}
@@ -46,6 +107,19 @@ find contrib -name tests -type d | xargs rm -rf
 
 %install
 %{__python} setup.py install -O1 --skip-build --root=%{buildroot}
+
+# docs generation requires everything to be installed first
+export PYTHONPATH="$( pwd ):$PYTHONPATH"
+
+pushd doc
+
+%if 0%{?with_doc}
+SPHINX_DEBUG=1 sphinx-build -b html source build/html
+# Fix hidden-file-or-dir warnings
+rm -fr build/html/.doctrees build/html/.buildinfo
+%endif
+popd
+
 mkdir -p %{buildroot}/var/log/magnum/
 mkdir -p %{buildroot}/var/run/magnum/
 install -p -D -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/logrotate.d/openstack-magnum
@@ -63,6 +137,9 @@ rm -rf %{buildroot}/%{python_sitelib}/magnum/tests
 
 install -p -D -m 640 etc/magnum/magnum.conf.sample %{buildroot}/%{_sysconfdir}/magnum/magnum.conf
 install -p -D -m 640 etc/magnum/policy.json %{buildroot}/%{_sysconfdir}/magnum
+
+%check
+%{__python2} setup.py test ||
 
 %package common
 Summary: Magnum common
@@ -189,6 +266,13 @@ OpenStack-native ReST API to the Magnum Engine
 %{_bindir}/magnum-api
 %{_unitdir}/openstack-magnum-api.service
 
+
+%if 0%{?with_doc}
+%files -n %{name}-doc
+%license LICENSE
+%doc doc/build/html
+%endif
+
 %post api
 %systemd_post openstack-magnum-api.service
 
@@ -199,6 +283,9 @@ OpenStack-native ReST API to the Magnum Engine
 %systemd_postun_with_restart openstack-magnum-api.service
 
 %changelog
+* Wed Dec 2 2015 Chandan Kumar <chkumar246@gmail.com> 1:1.1.0-2
+- Added Doc subpackage and enable tests
+
 * Tue Dec 1 2015 Mathieu Velten <mathieu.velten@cern.ch> 1:1.1.0-1
 - Mitaka M1 release
 
