@@ -17,6 +17,8 @@ Source1:	%{service}.logrotate
 Source2:	openstack-magnum-api.service
 Source3:	openstack-magnum-conductor.service
 
+Patch0:         revert-PortOpt.patch
+
 BuildArch: noarch
 
 BuildRequires: git
@@ -95,6 +97,8 @@ for deploying and managing containers as first class resources in OpenStack.
 
 %prep
 %setup -q -n %{service}-%{version}
+
+%patch0 -p1
 
 # Let's handle dependencies ourselves
 rm -rf {test-,}requirements{-bandit,}.txt tools/{pip,test}-requires
