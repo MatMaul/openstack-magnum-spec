@@ -15,7 +15,7 @@ Source0:	http://tarballs.openstack.org/%{service}/%{service}-%{version}.tar.gz
 
 Source1:	%{service}.logrotate
 Source2:	openstack-magnum-api.service
-Source4:	openstack-magnum-conductor.service
+Source3:	openstack-magnum-conductor.service
 
 BuildArch: noarch
 
@@ -126,7 +126,7 @@ install -p -D -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/logrotate.d/openstack
 
 # install systemd unit files
 install -p -D -m 644 %{SOURCE2} %{buildroot}%{_unitdir}/openstack-magnum-api.service
-install -p -D -m 644 %{SOURCE4} %{buildroot}%{_unitdir}/openstack-magnum-conductor.service
+install -p -D -m 644 %{SOURCE3} %{buildroot}%{_unitdir}/openstack-magnum-conductor.service
 
 mkdir -p %{buildroot}/var/lib/magnum/
 mkdir -p %{buildroot}/var/lib/magnum/certificates/
