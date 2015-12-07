@@ -3,7 +3,6 @@
 
 Name:		openstack-magnum
 Summary:	Container Management project for OpenStack
-Epoch:		1
 Version:	1.1.0
 Release:	2%{?dist}
 License:	ASL 2.0
@@ -24,11 +23,12 @@ BuildRequires: python2-devel
 BuildRequires: python-pbr
 BuildRequires: python-setuptools
 
+BuildRequires: systemd
 BuildRequires: systemd-units
 
-Requires: %{name}-common = %{epoch}:%{version}-%{release}
-Requires: %{name}-conductor = %{epoch}:%{version}-%{release}
-Requires: %{name}-api = %{epoch}:%{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
+Requires: %{name}-conductor = %{version}-%{release}
+Requires: %{name}-api = %{version}-%{release}
 
 %description
 Magnum is an OpenStack project which offers container orchestration engines
@@ -38,7 +38,7 @@ for deploying and managing containers as first class resources in OpenStack.
 %package -n %{name}-doc
 Summary:          Documentation for OpenStack Magnum
 
-Requires:         %{name} = %{epoch}:%{version}-%{release}
+Requires:         %{name} = %{version}-%{release}
 
 BuildRequires:   python-sphinx
 BuildRequires:   python-oslo-sphinx
@@ -52,10 +52,10 @@ This package contains documentation files for Magnum.
 %endif
 
 # tests
-%package -n %{name}-test
+%package -n %{name}-tests
 Summary:          Tests for OpenStack Magnum
 
-Requires:         %{name} = %{epoch}:%{version}-%{release}
+Requires:         %{name} = %{version}-%{release}
 
 BuildRequires:   python-coverage
 BuildRequires:   python-fixtures
@@ -89,7 +89,7 @@ BuildRequires:   python-docker-py
 BuildRequires:   python-pecan
 BuildRequires:   python-pep8
 
-%description -n %{name}-test
+%description -n %{name}-tests
 Magnum is an OpenStack project which offers container orchestration engines
 for deploying and managing containers as first class resources in OpenStack.
 
@@ -133,7 +133,6 @@ mkdir -p %{buildroot}/var/lib/magnum/certificates/
 mkdir -p %{buildroot}/etc/magnum/
 
 rm -rf %{buildroot}/var/lib/magnum/.dummy
-rm -rf %{buildroot}/%{python_sitelib}/magnum/tests
 
 install -p -D -m 640 etc/magnum/magnum.conf.sample %{buildroot}/%{_sysconfdir}/magnum/magnum.conf
 install -p -D -m 640 etc/magnum/policy.json %{buildroot}/%{_sysconfdir}/magnum
@@ -202,7 +201,9 @@ Components common to all OpenStack Magnum services
 %{_bindir}/magnum-db-manage
 %{_bindir}/magnum-template-manage
 %license LICENSE
-%{python_sitelib}/magnum*
+%{python_sitelib}/magnum
+%{python2_sitelib}/magnum-*.egg-info
+%exclude %{python2_sitelib}/magnum/tests
 %dir %attr(0750,magnum,root) %{_localstatedir}/log/magnum
 %dir %attr(0755,magnum,root) %{_localstatedir}/run/magnum
 %dir %attr(0755,magnum,root) %{_sharedstatedir}/magnum
@@ -223,7 +224,7 @@ exit 0
 %package conductor
 Summary: The Magnum conductor
 
-Requires: %{name}-common = %{epoch}:%{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
 
 Requires(post): systemd
 Requires(preun): systemd
@@ -251,7 +252,7 @@ OpenStack Magnum Conductor
 %package api
 Summary: The Magnum API
 
-Requires: %{name}-common = %{epoch}:%{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
 
 Requires(post): systemd
 Requires(preun): systemd
@@ -273,6 +274,11 @@ OpenStack-native ReST API to the Magnum Engine
 %doc doc/build/html
 %endif
 
+%files -n %{name}-tests
+%license LICENSE
+%{python2_sitelib}/magnum/tests
+
+
 %post api
 %systemd_post openstack-magnum-api.service
 
@@ -284,7 +290,9 @@ OpenStack-native ReST API to the Magnum Engine
 
 %changelog
 * Wed Dec 2 2015 Chandan Kumar <chkumar246@gmail.com> 1:1.1.0-2
-- Added Doc subpackage and enable tests
+- Added Doc and test subpackage
+- Cleaned spec
+- removed epoch
 
 * Tue Dec 1 2015 Mathieu Velten <mathieu.velten@cern.ch> 1:1.1.0-1
 - Mitaka M1 release
