@@ -4,7 +4,7 @@
 Name:		openstack-%{service}
 Summary:	Container Management project for OpenStack
 Version:	1.1.0
-Release:	3%{?dist}
+Release:	4%{?dist}
 License:	ASL 2.0
 URL:		https://github.com/openstack/magnum.git
 
@@ -86,6 +86,40 @@ Requires: python-urllib3
 %description -n python-%{service}
 Magnum is an OpenStack project which offers container orchestration engines
 for deploying and managing containers as first class resources in OpenStack.
+
+%package common
+Summary: Magnum common
+
+Requires: python-%{service} = %{version}-%{release}
+
+Requires(pre): shadow-utils
+
+%description common
+Components common to all OpenStack Magnum services
+
+%package conductor
+Summary: The Magnum conductor
+
+Requires: %{name}-common = %{version}-%{release}
+
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+
+%description conductor
+OpenStack Magnum Conductor
+
+%package api
+Summary: The Magnum API
+
+Requires: %{name}-common = %{version}-%{release}
+
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+
+%description api
+OpenStack-native ReST API to the Magnum Engine
 
 %if 0%{?with_doc}
 %package -n %{name}-doc
@@ -173,37 +207,23 @@ rm -fr build/html/.doctrees build/html/.buildinfo
 %endif
 popd
 
-mkdir -p %{buildroot}/var/log/magnum/
-mkdir -p %{buildroot}/var/run/magnum/
-install -p -D -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/logrotate.d/openstack-magnum
+mkdir -p %{buildroot}%{_localstatedir}/log/%{service}/
+mkdir -p %{buildroot}%{_localstatedir}/run/%{service}/
+install -p -D -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
 # install systemd unit files
-install -p -D -m 644 %{SOURCE2} %{buildroot}%{_unitdir}/openstack-magnum-api.service
-install -p -D -m 644 %{SOURCE3} %{buildroot}%{_unitdir}/openstack-magnum-conductor.service
+install -p -D -m 644 %{SOURCE2} %{buildroot}%{_unitdir}/%{name}-api.service
+install -p -D -m 644 %{SOURCE3} %{buildroot}%{_unitdir}/%{name}-conductor.service
 
-mkdir -p %{buildroot}/var/lib/magnum/
-mkdir -p %{buildroot}/var/lib/magnum/certificates/
-mkdir -p %{buildroot}/etc/magnum/
+mkdir -p %{buildroot}%{_sharedstatedir}/%{service}/
+mkdir -p %{buildroot}%{_sharedstatedir}/%{service}/certificates/
+mkdir -p %{buildroot}%{_sysconfdir}/%{service}/
 
-rm -rf %{buildroot}/var/lib/magnum/.dummy
-
-install -p -D -m 640 etc/magnum/magnum.conf.sample %{buildroot}/%{_sysconfdir}/magnum/magnum.conf
-install -p -D -m 640 etc/magnum/policy.json %{buildroot}/%{_sysconfdir}/magnum
+install -p -D -m 640 etc/magnum/magnum.conf.sample %{buildroot}%{_sysconfdir}/%{service}/magnum.conf
+install -p -D -m 640 etc/magnum/policy.json %{buildroot}%{_sysconfdir}/%{service}
 
 %check
 %{__python2} setup.py test ||
-
-%package common
-Summary: Magnum common
-
-Requires: python-%{service} = %{version}-%{release}
-
-Requires(pre): shadow-utils
-
-%description common
-Components common to all OpenStack Magnum services
-
-
 
 %files -n python-%{service}
 %license LICENSE
@@ -216,68 +236,44 @@ Components common to all OpenStack Magnum services
 %{_bindir}/magnum-db-manage
 %{_bindir}/magnum-template-manage
 %license LICENSE
-%dir %attr(0750,magnum,root) %{_localstatedir}/log/magnum
-%dir %attr(0755,magnum,root) %{_localstatedir}/run/magnum
-%dir %attr(0755,magnum,root) %{_sharedstatedir}/magnum
-%dir %attr(0755,magnum,root) %{_sharedstatedir}/magnum/certificates
-%dir %attr(0755,magnum,root) %{_sysconfdir}/magnum
-%config(noreplace) %{_sysconfdir}/logrotate.d/openstack-magnum
-%config(noreplace) %attr(-, root, magnum) %{_sysconfdir}/magnum/magnum.conf
-%config(noreplace) %attr(-, root, magnum) %{_sysconfdir}/magnum/policy.json
+%dir %attr(0750,%{service},root) %{_localstatedir}/log/%{service}
+%dir %attr(0755,%{service},root) %{_localstatedir}/run/%{service}
+%dir %attr(0755,%{service},root) %{_sharedstatedir}/%{service}
+%dir %attr(0755,%{service},root) %{_sharedstatedir}/%{service}/certificates
+%dir %attr(0755,%{service},root) %{_sysconfdir}/%{service}
+%config(noreplace) %{_sysconfdir}/logrotate.d/openstack-%{service}
+%config(noreplace) %attr(-, root, %{service}) %{_sysconfdir}/%{service}/magnum.conf
+%config(noreplace) %attr(-, root, %{service}) %{_sysconfdir}/%{service}/policy.json
 %pre common
 # 1870:1870 for magnum - rhbz#845078
-getent group magnum >/dev/null || groupadd -r --gid 1870 magnum
-getent passwd magnum  >/dev/null || \
-useradd --uid 1870 -r -g magnum -d %{_sharedstatedir}/magnum -s /sbin/nologin \
--c "OpenStack Magnum Daemons" magnum
+getent group %{service} >/dev/null || groupadd -r --gid 1870 %{service}
+getent passwd %{service}  >/dev/null || \
+useradd --uid 1870 -r -g %{service} -d %{_sharedstatedir}/%{service} -s /sbin/nologin \
+-c "OpenStack Magnum Daemons" %{service}
 exit 0
 
-
-%package conductor
-Summary: The Magnum conductor
-
-Requires: %{name}-common = %{version}-%{release}
-
-Requires(post): systemd
-Requires(preun): systemd
-Requires(postun): systemd
-
-%description conductor
-OpenStack Magnum Conductor
 
 %files conductor
 %doc README.rst
 %license LICENSE
 %{_bindir}/magnum-conductor
-%{_unitdir}/openstack-magnum-conductor.service
+%{_unitdir}/%{name}-conductor.service
 
 %post conductor
-%systemd_post openstack-magnum-conductor.service
+%systemd_post %{name}-conductor.service
 
 %preun conductor
-%systemd_preun openstack-magnum-conductor.service
+%systemd_preun %{name}-conductor.service
 
 %postun conductor
-%systemd_postun_with_restart openstack-magnum-conductor.service
+%systemd_postun_with_restart %{name}-conductor.service
 
-
-%package api
-Summary: The Magnum API
-
-Requires: %{name}-common = %{version}-%{release}
-
-Requires(post): systemd
-Requires(preun): systemd
-Requires(postun): systemd
-
-%description api
-OpenStack-native ReST API to the Magnum Engine
 
 %files api
 %doc README.rst
 %license LICENSE
 %{_bindir}/magnum-api
-%{_unitdir}/openstack-magnum-api.service
+%{_unitdir}/%{name}-api.service
 
 
 %if 0%{?with_doc}
@@ -292,15 +288,19 @@ OpenStack-native ReST API to the Magnum Engine
 
 
 %post api
-%systemd_post openstack-magnum-api.service
+%systemd_post %{name}-api.service
 
 %preun api
-%systemd_preun openstack-magnum-api.service
+%systemd_preun %{name}-api.service
 
 %postun api
-%systemd_postun_with_restart openstack-magnum-api.service
+%systemd_postun_with_restart %{name}-api.service
 
 %changelog
+* Fri Dec 11 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-4
+- Use macros whenever possible
+- move all %package definitions before %prep
+
 * Wed Dec 9 2015 Chandan Kumar <chkumar246@gmail.com> 1.1.0-3
 - Added python-magnum sub-package
 - cleaned the spec
