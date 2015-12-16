@@ -34,7 +34,6 @@ for deploying and managing containers as first class resources in OpenStack.
 %package -n python-%{service}
 Summary: Magnum Python libraries
 
-Requires: MySQL-python
 Requires: python-babel
 Requires: python-prettytable
 Requires: PyYAML
