@@ -1,21 +1,18 @@
 %global with_doc %{!?_without_doc:1}%{?_without_doc:0}
 %global service magnum
 
-Name:		openstack-magnum
+Name:		openstack-%{service}
 Summary:	Container Management project for OpenStack
-Epoch:		1
 Version:	1.1.0
-Release:	2%{?dist}
+Release:	4%{?dist}
 License:	ASL 2.0
 URL:		https://github.com/openstack/magnum.git
-
-Provides:	magnum
 
 Source0:	http://tarballs.openstack.org/%{service}/%{service}-%{version}.tar.gz
 
 Source1:	%{service}.logrotate
-Source2:	openstack-magnum-api.service
-Source3:	openstack-magnum-conductor.service
+Source2:	%{name}-api.service
+Source3:	%{name}-conductor.service
 
 Patch0:         revert-PortOpt.patch
 
@@ -28,127 +25,17 @@ BuildRequires: python-setuptools
 
 BuildRequires: systemd-units
 
-Requires: %{name}-common = %{epoch}:%{version}-%{release}
-Requires: %{name}-conductor = %{epoch}:%{version}-%{release}
-Requires: %{name}-api = %{epoch}:%{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
+Requires: %{name}-conductor = %{version}-%{release}
+Requires: %{name}-api = %{version}-%{release}
 
 %description
 Magnum is an OpenStack project which offers container orchestration engines
 for deploying and managing containers as first class resources in OpenStack.
 
-%if 0%{?with_doc}
-%package -n %{name}-doc
-Summary:          Documentation for OpenStack Magnum
+%package -n python-%{service}
+Summary: Magnum Python libraries
 
-Requires:         %{name} = %{epoch}:%{version}-%{release}
-
-BuildRequires:   python-sphinx
-BuildRequires:   python-oslo-sphinx
-BuildRequires:   python-stevedore
-
-%description -n %{name}-doc
-Magnum is an OpenStack project which offers container orchestration engines
-for deploying and managing containers as first class resources in OpenStack.
-
-This package contains documentation files for Magnum.
-%endif
-
-# tests
-%package -n %{name}-test
-Summary:          Tests for OpenStack Magnum
-
-Requires:         %{name} = %{epoch}:%{version}-%{release}
-
-BuildRequires:   python-coverage
-BuildRequires:   python-fixtures
-BuildRequires:   python-mock
-BuildRequires:   python-oslotest
-BuildRequires:   python-os-testr
-BuildRequires:   python-subunit
-BuildRequires:   python-testrepository
-BuildRequires:   python-testscenarios
-BuildRequires:   python-testtools
-BuildRequires:   python-tempest-lib
-BuildRequires:   python-wsme
-BuildRequires:   python-oslo-config
-BuildRequires:   python-oslo-policy
-BuildRequires:   python-jsonpatch
-BuildRequires:   python-barbicanclient
-BuildRequires:   python-eventlet
-BuildRequires:   python-keystoneclient
-BuildRequires:   python-cryptography
-BuildRequires:   python-heatclient
-BuildRequires:   python-oslo-messaging
-BuildRequires:   python-oslo-service
-BuildRequires:   python-taskflow
-BuildRequires:   python-oslo-db
-BuildRequires:   python-oslo-versionedobjects
-BuildRequires:   python-glanceclient
-BuildRequires:   python-keystonemiddleware
-BuildRequires:   python-mox3
-BuildRequires:   python-novaclient
-BuildRequires:   python-docker-py
-BuildRequires:   python-pecan
-BuildRequires:   python-pep8
-
-%description -n %{name}-test
-Magnum is an OpenStack project which offers container orchestration engines
-for deploying and managing containers as first class resources in OpenStack.
-
-%prep
-%setup -q -n %{service}-%{version}
-
-%patch0 -p1
-
-# Let's handle dependencies ourselves
-rm -rf {test-,}requirements{-bandit,}.txt tools/{pip,test}-requires
-
-# Remove tests in contrib
-find contrib -name tests -type d | xargs rm -rf
-
-%build
-%{__python} setup.py build
-
-%install
-%{__python} setup.py install -O1 --skip-build --root=%{buildroot}
-
-# docs generation requires everything to be installed first
-export PYTHONPATH="$( pwd ):$PYTHONPATH"
-
-pushd doc
-
-%if 0%{?with_doc}
-SPHINX_DEBUG=1 sphinx-build -b html source build/html
-# Fix hidden-file-or-dir warnings
-rm -fr build/html/.doctrees build/html/.buildinfo
-%endif
-popd
-
-mkdir -p %{buildroot}/var/log/magnum/
-mkdir -p %{buildroot}/var/run/magnum/
-install -p -D -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/logrotate.d/openstack-magnum
-
-# install systemd unit files
-install -p -D -m 644 %{SOURCE2} %{buildroot}%{_unitdir}/openstack-magnum-api.service
-install -p -D -m 644 %{SOURCE3} %{buildroot}%{_unitdir}/openstack-magnum-conductor.service
-
-mkdir -p %{buildroot}/var/lib/magnum/
-mkdir -p %{buildroot}/var/lib/magnum/certificates/
-mkdir -p %{buildroot}/etc/magnum/
-
-rm -rf %{buildroot}/var/lib/magnum/.dummy
-rm -rf %{buildroot}/%{python_sitelib}/magnum/tests
-
-install -p -D -m 640 etc/magnum/magnum.conf.sample %{buildroot}/%{_sysconfdir}/magnum/magnum.conf
-install -p -D -m 640 etc/magnum/policy.json %{buildroot}/%{_sysconfdir}/magnum
-
-%check
-%{__python2} setup.py test ||
-
-%package common
-Summary: Magnum common
-
-Requires: MySQL-python
 Requires: python-babel
 Requires: python-prettytable
 Requires: PyYAML
@@ -197,37 +84,24 @@ Requires: python-stevedore
 Requires: python-urllib3
 
 
+%description -n python-%{service}
+Magnum is an OpenStack project which offers container orchestration engines
+for deploying and managing containers as first class resources in OpenStack.
+
+%package common
+Summary: Magnum common
+
+Requires: python-%{service} = %{version}-%{release}
+
 Requires(pre): shadow-utils
 
 %description common
 Components common to all OpenStack Magnum services
 
-%files common
-%{_bindir}/magnum-db-manage
-%{_bindir}/magnum-template-manage
-%license LICENSE
-%{python_sitelib}/magnum*
-%dir %attr(0750,magnum,root) %{_localstatedir}/log/magnum
-%dir %attr(0755,magnum,root) %{_localstatedir}/run/magnum
-%dir %attr(0755,magnum,root) %{_sharedstatedir}/magnum
-%dir %attr(0755,magnum,root) %{_sharedstatedir}/magnum/certificates
-%dir %attr(0755,magnum,root) %{_sysconfdir}/magnum
-%config(noreplace) %{_sysconfdir}/logrotate.d/openstack-magnum
-%config(noreplace) %attr(-, root, magnum) %{_sysconfdir}/magnum/magnum.conf
-%config(noreplace) %attr(-, root, magnum) %{_sysconfdir}/magnum/policy.json
-%pre common
-# 1870:1870 for magnum - rhbz#845078
-getent group magnum >/dev/null || groupadd -r --gid 1870 magnum
-getent passwd magnum  >/dev/null || \
-useradd --uid 1870 -r -g magnum -d %{_sharedstatedir}/magnum -s /sbin/nologin \
--c "OpenStack Magnum Daemons" magnum
-exit 0
-
-
 %package conductor
 Summary: The Magnum conductor
 
-Requires: %{name}-common = %{epoch}:%{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
 
 Requires(post): systemd
 Requires(preun): systemd
@@ -236,26 +110,10 @@ Requires(postun): systemd
 %description conductor
 OpenStack Magnum Conductor
 
-%files conductor
-%doc README.rst
-%license LICENSE
-%{_bindir}/magnum-conductor
-%{_unitdir}/openstack-magnum-conductor.service
-
-%post conductor
-%systemd_post openstack-magnum-conductor.service
-
-%preun conductor
-%systemd_preun openstack-magnum-conductor.service
-
-%postun conductor
-%systemd_postun_with_restart openstack-magnum-conductor.service
-
-
 %package api
 Summary: The Magnum API
 
-Requires: %{name}-common = %{epoch}:%{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
 
 Requires(post): systemd
 Requires(preun): systemd
@@ -264,11 +122,161 @@ Requires(postun): systemd
 %description api
 OpenStack-native ReST API to the Magnum Engine
 
+%if 0%{?with_doc}
+%package -n %{name}-doc
+Summary:    Documentation for OpenStack Magnum
+
+Requires:    %{name} = %{version}-%{release}
+
+BuildRequires:  python-sphinx
+BuildRequires:  python-oslo-sphinx
+BuildRequires:  python-stevedore
+
+%description -n %{name}-doc
+Magnum is an OpenStack project which offers container orchestration engines
+for deploying and managing containers as first class resources in OpenStack.
+
+This package contains documentation files for Magnum.
+%endif
+
+# tests
+%package -n python-%{service}-tests
+Summary:          Tests for OpenStack Magnum
+
+Requires:         %{name} = %{version}-%{release}
+
+BuildRequires:   python-coverage
+BuildRequires:   python-fixtures
+BuildRequires:   python-mock
+BuildRequires:   python-oslotest
+BuildRequires:   python-os-testr
+BuildRequires:   python-subunit
+BuildRequires:   python-testrepository
+BuildRequires:   python-testscenarios
+BuildRequires:   python-testtools
+BuildRequires:   python-tempest-lib
+BuildRequires:   python-wsme
+BuildRequires:   python-oslo-config
+BuildRequires:   python-oslo-policy
+BuildRequires:   python-jsonpatch
+BuildRequires:   python-barbicanclient
+BuildRequires:   python-eventlet
+BuildRequires:   python-keystoneclient
+BuildRequires:   python-cryptography
+BuildRequires:   python-heatclient
+BuildRequires:   python-oslo-messaging
+BuildRequires:   python-oslo-service
+BuildRequires:   python-taskflow
+BuildRequires:   python-oslo-db
+BuildRequires:   python-oslo-versionedobjects
+BuildRequires:   python-glanceclient
+BuildRequires:   python-keystonemiddleware
+BuildRequires:   python-mox3
+BuildRequires:   python-novaclient
+BuildRequires:   python-docker-py
+BuildRequires:   python-pecan
+BuildRequires:   python-pep8
+
+%description -n python-%{service}-tests
+Magnum is an OpenStack project which offers container orchestration engines
+for deploying and managing containers as first class resources in OpenStack.
+
+%prep
+%setup -q -n %{service}-%{version}
+
+%patch0 -p1
+
+# Let's handle dependencies ourselves
+rm -rf {test-,}requirements{-bandit,}.txt tools/{pip,test}-requires
+
+# Remove tests in contrib
+find contrib -name tests -type d | xargs rm -rf
+
+%build
+%{__python2} setup.py build
+
+%install
+%{__python2} setup.py install -O1 --skip-build --root=%{buildroot}
+
+# docs generation requires everything to be installed first
+export PYTHONPATH="$( pwd ):$PYTHONPATH"
+
+pushd doc
+
+%if 0%{?with_doc}
+SPHINX_DEBUG=1 sphinx-build -b html source build/html
+# Fix hidden-file-or-dir warnings
+rm -fr build/html/.doctrees build/html/.buildinfo
+%endif
+popd
+
+mkdir -p %{buildroot}%{_localstatedir}/log/%{service}/
+mkdir -p %{buildroot}%{_localstatedir}/run/%{service}/
+install -p -D -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+
+# install systemd unit files
+install -p -D -m 644 %{SOURCE2} %{buildroot}%{_unitdir}/%{name}-api.service
+install -p -D -m 644 %{SOURCE3} %{buildroot}%{_unitdir}/%{name}-conductor.service
+
+mkdir -p %{buildroot}%{_sharedstatedir}/%{service}/
+mkdir -p %{buildroot}%{_sharedstatedir}/%{service}/certificates/
+mkdir -p %{buildroot}%{_sysconfdir}/%{service}/
+
+install -p -D -m 640 etc/magnum/magnum.conf.sample %{buildroot}%{_sysconfdir}/%{service}/magnum.conf
+install -p -D -m 640 etc/magnum/policy.json %{buildroot}%{_sysconfdir}/%{service}
+
+%check
+%{__python2} setup.py test ||
+
+%files -n python-%{service}
+%license LICENSE
+%{python2_sitelib}/%{service}
+%{python2_sitelib}/%{service}-*.egg-info
+%exclude %{python2_sitelib}/%{service}/tests
+
+
+%files common
+%{_bindir}/magnum-db-manage
+%{_bindir}/magnum-template-manage
+%license LICENSE
+%dir %attr(0750,%{service},root) %{_localstatedir}/log/%{service}
+%dir %attr(0755,%{service},root) %{_localstatedir}/run/%{service}
+%dir %attr(0755,%{service},root) %{_sharedstatedir}/%{service}
+%dir %attr(0755,%{service},root) %{_sharedstatedir}/%{service}/certificates
+%dir %attr(0755,%{service},root) %{_sysconfdir}/%{service}
+%config(noreplace) %{_sysconfdir}/logrotate.d/openstack-%{service}
+%config(noreplace) %attr(-, root, %{service}) %{_sysconfdir}/%{service}/magnum.conf
+%config(noreplace) %attr(-, root, %{service}) %{_sysconfdir}/%{service}/policy.json
+%pre common
+# 1870:1870 for magnum - rhbz#845078
+getent group %{service} >/dev/null || groupadd -r --gid 1870 %{service}
+getent passwd %{service}  >/dev/null || \
+useradd --uid 1870 -r -g %{service} -d %{_sharedstatedir}/%{service} -s /sbin/nologin \
+-c "OpenStack Magnum Daemons" %{service}
+exit 0
+
+
+%files conductor
+%doc README.rst
+%license LICENSE
+%{_bindir}/magnum-conductor
+%{_unitdir}/%{name}-conductor.service
+
+%post conductor
+%systemd_post %{name}-conductor.service
+
+%preun conductor
+%systemd_preun %{name}-conductor.service
+
+%postun conductor
+%systemd_postun_with_restart %{name}-conductor.service
+
+
 %files api
 %doc README.rst
 %license LICENSE
 %{_bindir}/magnum-api
-%{_unitdir}/openstack-magnum-api.service
+%{_unitdir}/%{name}-api.service
 
 
 %if 0%{?with_doc}
@@ -277,21 +285,36 @@ OpenStack-native ReST API to the Magnum Engine
 %doc doc/build/html
 %endif
 
+%files -n python-%{service}-tests
+%license LICENSE
+%{python2_sitelib}/magnum/tests
+
+
 %post api
-%systemd_post openstack-magnum-api.service
+%systemd_post %{name}-api.service
 
 %preun api
-%systemd_preun openstack-magnum-api.service
+%systemd_preun %{name}-api.service
 
 %postun api
-%systemd_postun_with_restart openstack-magnum-api.service
+%systemd_postun_with_restart %{name}-api.service
 
 %changelog
-* Wed Dec 2 2015 Chandan Kumar <chkumar246@gmail.com> 1:1.1.0-2
-- Added Doc subpackage and enable tests
+* Fri Dec 11 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-4
+- Use macros whenever possible
+- move all %package definitions before %prep
 
-* Tue Dec 1 2015 Mathieu Velten <mathieu.velten@cern.ch> 1:1.1.0-1
+* Wed Dec 9 2015 Chandan Kumar <chkumar246@gmail.com> 1.1.0-3
+- Added python-magnum sub-package
+- cleaned the spec
+
+* Wed Dec 2 2015 Chandan Kumar <chkumar246@gmail.com> 1.1.0-2
+- Added Doc and test subpackage
+- Cleaned spec
+- removed epoch
+
+* Tue Dec 1 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-1
 - Mitaka M1 release
 
-* Thu Nov 12 2015 Mathieu Velten <mathieu.velten@cern.ch> 1:1.0.0.0b2.dev4-1
+* Thu Nov 12 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.0.0.0b2.dev4-1
 - Initial Liberty release

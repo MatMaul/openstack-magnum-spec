@@ -6,6 +6,10 @@ After=syslog.target network.target
 Type=simple
 User=magnum
 ExecStart=/usr/bin/magnum-api
+PrivateTmp=true
+NotifyAccess=all
+KillMode=process
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
