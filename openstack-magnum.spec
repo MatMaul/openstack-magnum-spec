@@ -3,8 +3,8 @@
 
 Name:		openstack-%{service}
 Summary:	Container Management project for OpenStack
-Version:	1.1.0
-Release:	5%{?dist}
+Version:	XXX
+Release:	XXX
 License:	ASL 2.0
 URL:		https://github.com/openstack/magnum.git
 
@@ -296,24 +296,4 @@ exit 0
 %systemd_postun_with_restart %{name}-api.service
 
 %changelog
-* Mon Jan 4 2016 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-5
-- Fix wrong Requires
 
-* Fri Dec 11 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-4
-- Use macros whenever possible
-- move all %package definitions before %prep
-
-* Wed Dec 9 2015 Chandan Kumar <chkumar246@gmail.com> 1.1.0-3
-- Added python-magnum sub-package
-- cleaned the spec
-
-* Wed Dec 2 2015 Chandan Kumar <chkumar246@gmail.com> 1.1.0-2
-- Added Doc and test subpackage
-- Cleaned spec
-- removed epoch
-
-* Tue Dec 1 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-1
-- Mitaka M1 release
-
-* Thu Nov 12 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.0.0.0b2.dev4-1
-- Initial Liberty release
