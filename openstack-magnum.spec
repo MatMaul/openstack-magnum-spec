@@ -4,7 +4,7 @@
 Name:		openstack-%{service}
 Summary:	Container Management project for OpenStack
 Version:	1.1.0
-Release:	4%{?dist}
+Release:	5%{?dist}
 License:	ASL 2.0
 URL:		https://github.com/openstack/magnum.git
 
@@ -126,7 +126,7 @@ OpenStack-native ReST API to the Magnum Engine
 %package -n %{name}-doc
 Summary:    Documentation for OpenStack Magnum
 
-Requires:    %{name} = %{version}-%{release}
+Requires:    python-%{service} = %{version}-%{release}
 
 BuildRequires:  python-sphinx
 BuildRequires:  python-oslo-sphinx
@@ -143,7 +143,7 @@ This package contains documentation files for Magnum.
 %package -n python-%{service}-tests
 Summary:          Tests for OpenStack Magnum
 
-Requires:         %{name} = %{version}-%{release}
+Requires:         python-%{service} = %{version}-%{release}
 
 BuildRequires:   python-coverage
 BuildRequires:   python-fixtures
@@ -287,7 +287,7 @@ exit 0
 
 %files -n python-%{service}-tests
 %license LICENSE
-%{python2_sitelib}/magnum/tests
+%{python2_sitelib}/%{service}/tests
 
 
 %post api
@@ -300,6 +300,9 @@ exit 0
 %systemd_postun_with_restart %{name}-api.service
 
 %changelog
+* Mon Jan 4 2016 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-5
+- Fix wrong Requires
+
 * Fri Dec 11 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-4
 - Use macros whenever possible
 - move all %package definitions before %prep
