@@ -3,8 +3,8 @@
 
 Name:		openstack-%{service}
 Summary:	Container Management project for OpenStack
-Version:	1.1.0
-Release:	5%{?dist}
+Version:	XXX
+Release:	XXX
 License:	ASL 2.0
 URL:		https://github.com/openstack/magnum.git
 
@@ -45,6 +45,7 @@ Requires: python-webob
 Requires: python-alembic
 Requires: python-decorator
 Requires: python-docker-py
+Requires: python-enum34
 Requires: python-eventlet
 Requires: python-greenlet
 Requires: python-iso8601
@@ -59,6 +60,7 @@ Requires: python-oslo-db
 Requires: python-oslo-i18n
 Requires: python-oslo-log
 Requires: python-oslo-messaging
+Requires: python-oslo-middleware
 Requires: python-oslo-policy
 Requires: python-oslo-serialization
 Requires: python-oslo-service
@@ -80,7 +82,6 @@ Requires: python-six
 Requires: python-stevedore
 Requires: python-taskflow
 Requires: python-cryptography
-Requires: python-stevedore
 Requires: python-urllib3
 
 
@@ -143,10 +144,12 @@ This package contains documentation files for Magnum.
 %package -n python-%{service}-tests
 Summary:          Tests for OpenStack Magnum
 
-Requires:         python-%{service} = %{version}-%{release}
+Requires:        python-%{service} = %{version}-%{release}
 
+BuildRequires:   python-bandit
 BuildRequires:   python-coverage
 BuildRequires:   python-fixtures
+BuildRequires:   python-hacking
 BuildRequires:   python-mock
 BuildRequires:   python-oslotest
 BuildRequires:   python-os-testr
@@ -155,34 +158,13 @@ BuildRequires:   python-testrepository
 BuildRequires:   python-testscenarios
 BuildRequires:   python-testtools
 BuildRequires:   python-tempest-lib
-BuildRequires:   python-wsme
-BuildRequires:   python-oslo-config
-BuildRequires:   python-oslo-policy
-BuildRequires:   python-jsonpatch
-BuildRequires:   python-barbicanclient
-BuildRequires:   python-eventlet
-BuildRequires:   python-keystoneclient
-BuildRequires:   python-cryptography
-BuildRequires:   python-heatclient
-BuildRequires:   python-oslo-messaging
-BuildRequires:   python-oslo-service
-BuildRequires:   python-taskflow
-BuildRequires:   python-oslo-db
-BuildRequires:   python-oslo-versionedobjects
-BuildRequires:   python-glanceclient
-BuildRequires:   python-keystonemiddleware
-BuildRequires:   python-mox3
-BuildRequires:   python-novaclient
-BuildRequires:   python-docker-py
-BuildRequires:   python-pecan
-BuildRequires:   python-pep8
 
 %description -n python-%{service}-tests
 Magnum is an OpenStack project which offers container orchestration engines
 for deploying and managing containers as first class resources in OpenStack.
 
 %prep
-%setup -q -n %{service}-%{version}
+%setup -q -n %{service}-%{upstream_version}
 
 %patch0 -p1
 
@@ -300,24 +282,4 @@ exit 0
 %systemd_postun_with_restart %{name}-api.service
 
 %changelog
-* Mon Jan 4 2016 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-5
-- Fix wrong Requires
 
-* Fri Dec 11 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-4
-- Use macros whenever possible
-- move all %package definitions before %prep
-
-* Wed Dec 9 2015 Chandan Kumar <chkumar246@gmail.com> 1.1.0-3
-- Added python-magnum sub-package
-- cleaned the spec
-
-* Wed Dec 2 2015 Chandan Kumar <chkumar246@gmail.com> 1.1.0-2
-- Added Doc and test subpackage
-- Cleaned spec
-- removed epoch
-
-* Tue Dec 1 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.1.0-1
-- Mitaka M1 release
-
-* Thu Nov 12 2015 Mathieu Velten <mathieu.velten@cern.ch> 1.0.0.0b2.dev4-1
-- Initial Liberty release
