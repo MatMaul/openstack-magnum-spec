@@ -159,6 +159,55 @@ BuildRequires:   python-testscenarios
 BuildRequires:   python-testtools
 BuildRequires:   python-tempest-lib
 
+# copy-paste from runtime Requires
+BuildRequires: python-babel
+BuildRequires: python-prettytable
+BuildRequires: PyYAML
+BuildRequires: python-sqlalchemy
+BuildRequires: python2-wsme
+BuildRequires: python-webob
+BuildRequires: python-alembic
+BuildRequires: python-decorator
+BuildRequires: python-docker-py
+BuildRequires: python-enum34
+BuildRequires: python-eventlet
+BuildRequires: python-greenlet
+BuildRequires: python-iso8601
+BuildRequires: python-jsonpatch
+BuildRequires: python-keystonemiddleware
+BuildRequires: python-netaddr
+
+BuildRequires: python-oslo-concurrency
+BuildRequires: python-oslo-config
+BuildRequires: python-oslo-context
+BuildRequires: python-oslo-db
+BuildRequires: python-oslo-i18n
+BuildRequires: python-oslo-log
+BuildRequires: python-oslo-messaging
+BuildRequires: python-oslo-middleware
+BuildRequires: python-oslo-policy
+BuildRequires: python-oslo-serialization
+BuildRequires: python-oslo-service
+BuildRequires: python-oslo-utils
+BuildRequires: python-oslo-versionedobjects
+BuildRequires: python-oslo-reports
+
+BuildRequires: python-paramiko
+BuildRequires: python2-pecan
+
+BuildRequires: python-barbicanclient
+BuildRequires: python-glanceclient
+BuildRequires: python-heatclient
+BuildRequires: python-novaclient
+BuildRequires: python-keystoneclient
+
+BuildRequires: python-requests
+BuildRequires: python-six
+BuildRequires: python-stevedore
+BuildRequires: python-taskflow
+BuildRequires: python-cryptography
+BuildRequires: python-urllib3
+
 %description -n python-%{service}-tests
 Magnum is an OpenStack project which offers container orchestration engines
 for deploying and managing containers as first class resources in OpenStack.
